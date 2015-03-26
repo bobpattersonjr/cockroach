@@ -1420,6 +1420,15 @@ func (r *Range) splitTrigger(batch engine.Engine, split *proto.SplitTrigger) err
 	}
 	newRng.stats.SetMVCCStats(batch, ms)
 
+	// Insert the range into the RangeTree.
+	rangeTree, err := GetRangeTree(r.rm.Engine(), now)
+	if err != nil {
+		return util.Errorf("unable to fetch the range tree: %s", err)
+	}
+	if err = rangeTree.InsertRange(r.rm.Engine(), &ms, now, split.NewDesc.StartKey); err != nil {
+		return util.Errorf("unable to insert new range into range tree: %s", err)
+	}
+
 	return r.rm.SplitRange(r, newRng)
 }
 
